@@ -1,0 +1,43 @@
+from http import HTTPStatus
+from http.server import BaseHTTPRequestHandler, HTTPServer
+import json
+from socketserver import BaseServer
+from sys import argv
+
+
+class RequestHandler(BaseHTTPRequestHandler):
+    routes = {}
+
+    def __init__(self, request, client_address, server: BaseServer) -> None:
+        super().__init__(request, client_address, server)
+
+    def set_headers(self) -> None:
+        self.send_header("Access-Control-Allow-Origin", "*")
+        self.send_header(
+            "Access-Control-Allow-Methods", "GET, POST, PUT, DELETE, OPTIONS"
+        )
+        self.send_header("Access-Control-Allow-Headers", "token, Content-Type")
+        self.send_header("Content-Type", "text/html")
+        self.end_headers()
+
+    def do_GET(self) -> None:
+        self.send_response(HTTPStatus.OK)
+        self.set_headers()
+        self.wfile.write("<html><body><h1>Hello, World!</h1></body></html>".encode("utf-8"))
+
+
+if __name__ == "__main__":
+    if len(argv) < 3 or not argv[2].isnumeric():
+        print("WRONG USAGE!")
+        print("server.py ip port")
+        exit(1)
+
+    server = HTTPServer((argv[1], int(argv[2])), RequestHandler)
+
+    print(f"Running server at: http://{argv[1]}:{argv[2]}")
+
+    try:
+        server.serve_forever()
+    except KeyboardInterrupt:
+        pass
+    server.server_close()

@@ -4,14 +4,13 @@ from handler import RequestHandler
 import ssl
 from database import get_connection_and_cursor
 from os import system, environ
-import register
 
-try:
-    conn, cur = get_connection_and_cursor()
-    conn.close()
-    cur.close()
-except:
-    system("python3 run_sql.py create_db.sql populate_db.sql")
+# try:
+#     conn, cur = get_connection_and_cursor()
+#     conn.close()
+#     cur.close()
+# except: # If db doesnt exists, create.
+#     system("python3 run_sql.py create_db.sql populate_db.sql")
 
 if __name__ == "__main__":
     if len(argv) < 3 or not argv[2].isnumeric():
