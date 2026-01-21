@@ -1,2 +1,1 @@
-from routes import teste
-
+from . import teste1, teste2
