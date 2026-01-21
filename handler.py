@@ -2,6 +2,7 @@ from http import HTTPMethod, HTTPStatus
 from http.server import BaseHTTPRequestHandler, HTTPServer
 from socketserver import BaseServer
 from sys import argv
+import json
 
 from router import route_get_callback
 from routes import * # Registering routes
@@ -30,7 +31,13 @@ class RequestHandler(BaseHTTPRequestHandler):
 
         self.send_response(HTTPStatus.OK)
         self.set_default_headers()
-        self.wfile.write(route_callback().encode("utf-8"))
+
+        data = route_callback()
+
+        if isinstance(data, (dict, list)):
+            data = json.dumps(data)
+
+        self.wfile.write(data.encode("utf-8"))
 
     def do_GET(self) -> None:
         self.run_route(HTTPMethod.GET)

@@ -4,12 +4,14 @@ from typing import Callable
 
 _routes: dict[HTTPMethod, dict[str, Callable]] = {}
 
+# Parameters is Any | None.
+RouteCallback = Callable[..., str | dict | list]
 
-def route_add(path: str, method: HTTPMethod, callback: Callable) -> None:
+def route_add(path: str, method: HTTPMethod, callback: RouteCallback) -> None:
     _routes.setdefault(method, {})[path] = callback
 
 
-def route_get_callback(path: str, method: HTTPMethod) -> Callable | None:
+def route_get_callback(path: str, method: HTTPMethod) -> RouteCallback | None:
     if path not in _routes[method].keys():
         return
 
@@ -17,7 +19,7 @@ def route_get_callback(path: str, method: HTTPMethod) -> Callable | None:
 
 
 def route(path: str, method: HTTPMethod):
-    def decorator(func):
+    def decorator(func: RouteCallback):
         route_add(path, method, func)
         return func
 
