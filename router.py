@@ -1,7 +1,10 @@
 from functools import wraps
 from http import HTTPMethod
-from typing import Callable, get_type_hints
+from typing import Callable
 from mariadb import Connection, Cursor
+import inspect
+
+from database import get_connection_and_cursor
 
 
 _routes: dict[HTTPMethod, dict[str, Callable]] = {}
@@ -23,19 +26,21 @@ def route_get_callback(path: str, method: HTTPMethod) -> RouteCallback | None:
 
 def route(path: str, method: HTTPMethod):
     def decorator(func: RouteCallback):
-        type_hints = get_type_hints(func)
+        sig = inspect.signature(func)
 
         @wraps(func)
-        def wrapper(**params):
-            for param_name in params.keys():
-                expected_type = type_hints.get(param_name)
+        def wrapper(**kwargs):
+            conn = None
+            cur = None
 
-                if expected_type is Connection:
-                    params[param_name] = None
-                elif expected_type is Cursor:
-                    params[param_name] = None
+            for name, param in sig.parameters.items():
+                if param.annotation in (Connection, Cursor):
+                    if not conn:
+                        conn, cur = get_connection_and_cursor()
 
-            return func(**params)
+                    kwargs[name] = conn if param.annotation is Connection else cur
+
+            return func(**kwargs)
 
         route_add(path, method, wrapper)
 

@@ -1,7 +1,6 @@
 from http import HTTPMethod, HTTPStatus
 from http.server import BaseHTTPRequestHandler, HTTPServer
 from socketserver import BaseServer
-from sys import argv
 import json
 
 from router import route_get_callback
