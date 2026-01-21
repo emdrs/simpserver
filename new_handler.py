@@ -4,11 +4,7 @@ from socketserver import BaseServer
 from sys import argv
 from new_router import routes
 
-import new_test
-
-
-
-print(routes)
+from new_routes import *
 
 
 class RequestHandler(BaseHTTPRequestHandler):
@@ -27,7 +23,6 @@ class RequestHandler(BaseHTTPRequestHandler):
     def do_GET(self) -> None:
         self.send_response(HTTPStatus.OK)
         self.set_headers()
-        print(routes)
         self.wfile.write(routes[HTTPMethod.GET]["/test"]().encode("utf-8"))
 
 
