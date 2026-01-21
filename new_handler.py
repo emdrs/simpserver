@@ -11,7 +11,7 @@ class RequestHandler(BaseHTTPRequestHandler):
     def __init__(self, request, client_address, server: BaseServer) -> None:
         super().__init__(request, client_address, server)
 
-    def set_headers(self) -> None:
+    def set_default_headers(self) -> None:
         self.send_header("Access-Control-Allow-Origin", "*")
         self.send_header(
             "Access-Control-Allow-Methods", "GET, POST, PUT, DELETE, OPTIONS"
@@ -23,11 +23,11 @@ class RequestHandler(BaseHTTPRequestHandler):
     def do_GET(self) -> None:
         if self.path not in routes[HTTPMethod.GET].keys():
             self.send_response(HTTPStatus.NOT_FOUND)
-            self.set_headers()
+            self.set_default_headers()
             return
 
         self.send_response(HTTPStatus.OK)
-        self.set_headers()
+        self.set_default_headers()
         self.wfile.write(routes[HTTPMethod.GET][self.path]().encode("utf-8"))
 
 
