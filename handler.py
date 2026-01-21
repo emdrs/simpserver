@@ -43,15 +43,10 @@ class RequestHandler(BaseHTTPRequestHandler):
         self.run_route(HTTPMethod.GET)
 
 
-if __name__ == "__main__":
-    if len(argv) < 3 or not argv[2].isnumeric():
-        print("WRONG USAGE!")
-        print("server.py ip port")
-        exit(1)
+def serve_api(ip: str, port: int) -> None:
+    server = HTTPServer(((ip, port)), RequestHandler)
 
-    server = HTTPServer((argv[1], int(argv[2])), RequestHandler)
-
-    print(f"Running server at: http://{argv[1]}:{argv[2]}")
+    print(f"Running api at: http://{ip}:{port}")
 
     try:
         server.serve_forever()
