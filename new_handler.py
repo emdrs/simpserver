@@ -21,9 +21,14 @@ class RequestHandler(BaseHTTPRequestHandler):
         self.end_headers()
 
     def do_GET(self) -> None:
+        if self.path not in routes[HTTPMethod.GET].keys():
+            self.send_response(HTTPStatus.NOT_FOUND)
+            self.set_headers()
+            return
+
         self.send_response(HTTPStatus.OK)
         self.set_headers()
-        self.wfile.write(routes[HTTPMethod.GET]["/test"]().encode("utf-8"))
+        self.wfile.write(routes[HTTPMethod.GET][self.path]().encode("utf-8"))
 
 
 if __name__ == "__main__":
