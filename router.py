@@ -31,9 +31,9 @@ def route(path: str, method: HTTPMethod):
                 expected_type = type_hints.get(param_name)
 
                 if expected_type is Connection:
-                    print(f"{param_name} é Connection")
+                    params[param_name] = None
                 elif expected_type is Cursor:
-                    print(f"{param_name} é Cursor")
+                    params[param_name] = None
 
             return func(**params)
 
