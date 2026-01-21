@@ -1,13 +1,17 @@
-from http import HTTPStatus
+from http import HTTPMethod, HTTPStatus
 from http.server import BaseHTTPRequestHandler, HTTPServer
-import json
 from socketserver import BaseServer
 from sys import argv
+from new_router import routes
+
+import new_test
+
+
+
+print(routes)
 
 
 class RequestHandler(BaseHTTPRequestHandler):
-    routes = {}
-
     def __init__(self, request, client_address, server: BaseServer) -> None:
         super().__init__(request, client_address, server)
 
@@ -23,7 +27,8 @@ class RequestHandler(BaseHTTPRequestHandler):
     def do_GET(self) -> None:
         self.send_response(HTTPStatus.OK)
         self.set_headers()
-        self.wfile.write("<html><body><h1>Hello, World!</h1></body></html>".encode("utf-8"))
+        print(routes)
+        self.wfile.write(routes[HTTPMethod.GET]["/test"]().encode("utf-8"))
 
 
 if __name__ == "__main__":
