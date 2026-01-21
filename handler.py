@@ -2,8 +2,8 @@ from http import HTTPMethod, HTTPStatus
 from http.server import BaseHTTPRequestHandler, HTTPServer
 from socketserver import BaseServer
 from sys import argv
-from router import routes
 
+from router import route_get_callback
 from routes import * # Registering routes
 
 
@@ -20,15 +20,20 @@ class RequestHandler(BaseHTTPRequestHandler):
         self.send_header("Content-Type", "text/html")
         self.end_headers()
 
-    def do_GET(self) -> None:
-        if self.path not in routes[HTTPMethod.GET].keys():
+    def run_route(self, method: HTTPMethod) -> str | None:
+        route_callback = route_get_callback(self.path, method)
+
+        if not route_callback:
             self.send_response(HTTPStatus.NOT_FOUND)
             self.set_default_headers()
             return
 
         self.send_response(HTTPStatus.OK)
         self.set_default_headers()
-        self.wfile.write(routes[HTTPMethod.GET][self.path]().encode("utf-8"))
+        self.wfile.write(route_callback().encode("utf-8"))
+
+    def do_GET(self) -> None:
+        self.run_route(HTTPMethod.GET)
 
 
 if __name__ == "__main__":
