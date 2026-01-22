@@ -41,6 +41,9 @@ class RequestHandler(BaseHTTPRequestHandler):
     def do_GET(self) -> None:
         self.run_route(HTTPMethod.GET)
 
+    def do_POST(self) -> None:
+        self.run_route(HTTPMethod.POST)
+
 
 def serve_api(ip: str, port: int) -> None:
     server = HTTPServer(((ip, port)), RequestHandler)
