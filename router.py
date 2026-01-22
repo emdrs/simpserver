@@ -34,20 +34,29 @@ def route_get_callback(path: str, method: HTTPMethod) -> RouteCallback | None:
 def route(path: str, method: HTTPMethod):
     def decorator(func: RouteCallback):
         sig = inspect.signature(func)
+        params_names = sig.parameters.keys()
+
+        # Params that can be injected
+        has_conn = "conn" in params_names
+        has_cur = "cur" in params_names
+        has_req = "req" in params_names
 
         @wraps(func)
         def wrapper(**kwargs):
             conn: Connection | None = None
             cur: Cursor | None = None
 
-            if "conn" in sig.parameters.keys():
+            if has_conn:
                 if not conn:
                     conn, cur = get_connection_and_cursor()
                 kwargs["conn"] = conn
-            if "cur" in sig.parameters.keys():
+            if has_cur:
                 if not conn:
                     conn, cur = get_connection_and_cursor()
                 kwargs["cur"] = cur
+
+            if has_req:
+                kwargs.pop("req")
 
             if conn and cur: # If use cursor or connection, the commit() is executed automatically at the end.
                 with conn: # If get an error with opened connection, the server freezes.
