@@ -12,3 +12,12 @@ def get_users(cur: Cursor) -> list[dict]:
     rows = cur.fetchall()
 
     return [{"id": row[0], "name": row[1]} for row in rows]
+
+
+@route("/users", HTTPMethod.POST)
+def add_user(cur: Cursor, body: dict) -> dict:
+    query = "INSERT INTO Users (name) VALUES (?)"
+
+    cur.execute(query, (body["name"],))
+
+    return {"message": "user added successfuly."}
