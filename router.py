@@ -30,8 +30,8 @@ def route(path: str, method: HTTPMethod):
 
         @wraps(func)
         def wrapper(**kwargs):
-            conn = None
-            cur = None
+            conn: Connection | None = None
+            cur: Cursor | None = None
 
             for name, param in sig.parameters.items():
                 if param.annotation in (Connection, Cursor):
@@ -40,6 +40,12 @@ def route(path: str, method: HTTPMethod):
 
                     kwargs[name] = conn if param.annotation is Connection else cur
 
+            if conn and cur: # If use cursor or connection, the commit() is executed automatically at the end.
+                with conn:
+                    with cur:
+                        response = func(**kwargs)
+                        conn.commit() # Auto committing the db connection.
+                        return response
             return func(**kwargs)
 
         route_add(path, method, wrapper)

@@ -1,15 +1,12 @@
 from http import HTTPMethod
-from mariadb import Connection, Cursor
+from mariadb import Cursor
 
 from router import route
 
 
 @route("/users", HTTPMethod.GET)
-def get_users(co: Connection, cu: Cursor) -> list[dict]:
+def get_users(cu: Cursor) -> list[dict]:
     query = "SELECT * FROM Users"
-
-    cu.execute("INSERT INTO Users (name) VALUES ('Manelzaum de Alves Emanuel')")
-    co.commit()
 
     cu.execute(query)
     rows = cu.fetchall()
