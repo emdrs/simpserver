@@ -4,7 +4,7 @@ from socketserver import BaseServer
 import json
 
 from router import route_get_callback
-from routes import * # Registering routes
+from routes import *  # Registering routes
 
 
 class RequestHandler(BaseHTTPRequestHandler):
@@ -31,7 +31,7 @@ class RequestHandler(BaseHTTPRequestHandler):
         self.send_response(HTTPStatus.OK)
         self.set_default_headers()
 
-        data = route_callback()
+        data = route_callback(req=self)
 
         if isinstance(data, (dict, list)):
             data = json.dumps(data)
