@@ -40,15 +40,17 @@ def route(path: str, method: HTTPMethod):
             conn: Connection | None = None
             cur: Cursor | None = None
 
-            for name, param in sig.parameters.items():
-                if param.annotation in (Connection, Cursor):
-                    if not conn:
-                        conn, cur = get_connection_and_cursor()
-
-                    kwargs[name] = conn if param.annotation is Connection else cur
+            if "conn" in sig.parameters.keys():
+                if not conn:
+                    conn, cur = get_connection_and_cursor()
+                kwargs["conn"] = conn
+            if "cur" in sig.parameters.keys():
+                if not conn:
+                    conn, cur = get_connection_and_cursor()
+                kwargs["cur"] = cur
 
             if conn and cur: # If use cursor or connection, the commit() is executed automatically at the end.
-                with conn:
+                with conn: # If get an error with opened connection, the server freezes.
                     with cur:
                         response = func(**kwargs)
                         conn.commit() # Auto committing the db connection.
