@@ -43,25 +43,25 @@ def route(path: str, method: HTTPMethod):
 
         @wraps(func)
         def wrapper(**kwargs):
-            conn: Connection | None = None
-            cur: Cursor | None = None
-
-            if has_conn:
-                if not conn:
-                    conn, cur = get_connection_and_cursor()
-                kwargs["conn"] = conn
-            if has_cur:
-                if not conn:
-                    conn, cur = get_connection_and_cursor()
-                kwargs["cur"] = cur
-
             if has_req:
                 kwargs.pop("req")
 
-            if conn and cur: # If use cursor or connection, the commit() is executed automatically at the end.
-                with conn: # If get an error with opened connection, the server freezes.
+            if has_conn or has_cur: # If use cursor or connection, the commit() is executed automatically at the end.
+                conn, cur = get_connection_and_cursor()
+
+                if has_conn:
+                    kwargs["conn"] = conn
+                if has_cur:
+                    kwargs["cur"] = cur
+
+                """
+                This solves a bug that if get an error with opened connection, the
+                server freezes. Why? I dont really know.
+                """
+                with conn: 
                     with cur:
                         response = func(**kwargs)
+
                         conn.commit() # Auto committing the db connection.
                         return response
 
