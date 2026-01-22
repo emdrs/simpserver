@@ -25,7 +25,7 @@ def route_add(path: str, method: HTTPMethod, callback: RouteCallback) -> None:
 
 
 def route_get_callback(path: str, method: HTTPMethod) -> RouteCallback | None:
-    if path not in _routes[method].keys():
+    if method not in _routes.keys() or path not in _routes[method].keys():
         return None
 
     return _routes[method][path]
