@@ -9,7 +9,8 @@ from database import get_connection_and_cursor
 _routes: dict[HTTPMethod, dict[str, Callable]] = {}
 
 # Parameters is Any | None.
-RouteCallback = Callable[..., str | dict | list]
+RouteCallbackReturn = str | dict | list
+RouteCallback = Callable[..., RouteCallbackReturn]
 
 
 def route_add(path: str, method: HTTPMethod, callback: RouteCallback) -> None:
@@ -30,6 +31,7 @@ def route_get_callback(path: str, method: HTTPMethod) -> RouteCallback | None:
     return _routes[method][path]
 
 
+
 def route(path: str, method: HTTPMethod):
     def decorator(func: RouteCallback):
         sig = inspect.signature(func)
@@ -43,7 +45,7 @@ def route(path: str, method: HTTPMethod):
         has_body = "body" in params_names
 
         @wraps(func)
-        def wrapper(**kwargs):
+        def wrapper(**kwargs) -> RouteCallbackReturn:
             if not has_req:
                 kwargs.pop("req")
 
@@ -75,3 +77,26 @@ def route(path: str, method: HTTPMethod):
         return wrapper
 
     return decorator
+
+def ensure_body_keys(keys: dict[str, type]):
+    def decorator(func: RouteCallback):
+        def wrapper(**kwargs) -> RouteCallbackReturn:
+            body_names = kwargs["body"].keys()
+            body = kwargs["body"]
+
+            for name, t in keys.items():
+                if name not in body_names:
+                    raise ValueError(f"{name} not in body.")
+                if not isinstance(body[name], t):
+                    raise ValueError(f"{name} is not {t}.")
+
+            return func(**kwargs)
+
+        return wrapper
+
+    return decorator
+
+@route("/teste", HTTPMethod.GET)
+@ensure_body_keys({"name": str})
+def teste(body: dict) -> str:
+    return f"Opa: {body}"

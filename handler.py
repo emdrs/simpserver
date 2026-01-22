@@ -34,7 +34,7 @@ class RequestHandler(BaseHTTPRequestHandler):
         return body
 
 
-    def run_route(self, method: HTTPMethod) -> str | None:
+    def run_route(self, method: HTTPMethod) -> None:
         route_callback = route_get_callback(self.path, method)
 
         if not route_callback:
