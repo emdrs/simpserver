@@ -20,6 +20,20 @@ class RequestHandler(BaseHTTPRequestHandler):
         self.send_header("Content-Type", "text/html")
         self.end_headers()
 
+    def get_body(self) -> dict:
+        content_length = int(self.headers.get("Content-Length", 0))
+        body_data = self.rfile.read(content_length).decode("utf-8")
+        if not body_data:
+            return {}
+
+        body = json.loads(body_data)
+
+        if not isinstance(body, dict):
+            raise ValueError("Invalid body")
+
+        return body
+
+
     def run_route(self, method: HTTPMethod) -> str | None:
         route_callback = route_get_callback(self.path, method)
 
@@ -31,7 +45,7 @@ class RequestHandler(BaseHTTPRequestHandler):
         self.send_response(HTTPStatus.OK)
         self.set_default_headers()
 
-        data = route_callback(req=self)
+        data = route_callback(req=self, body=self.get_body())
 
         if isinstance(data, (dict, list)):
             data = json.dumps(data)

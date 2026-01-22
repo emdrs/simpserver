@@ -1,7 +1,6 @@
 from functools import wraps
 from http import HTTPMethod
 from typing import Callable
-from mariadb import Connection, Cursor
 import inspect
 
 from database import get_connection_and_cursor
@@ -39,14 +38,19 @@ def route(path: str, method: HTTPMethod):
         # Params that can be injected
         has_conn = "conn" in params_names
         has_cur = "cur" in params_names
+        has_conn_or_cur = has_conn or has_cur
         has_req = "req" in params_names
+        has_body = "body" in params_names
 
         @wraps(func)
         def wrapper(**kwargs):
-            if has_req:
+            if not has_req:
                 kwargs.pop("req")
 
-            if has_conn or has_cur: # If use cursor or connection, the commit() is executed automatically at the end.
+            if not has_body:
+                kwargs.pop("body")
+
+            if has_conn_or_cur: # If use cursor or connection, the commit() is executed automatically at the end.
                 conn, cur = get_connection_and_cursor()
 
                 if has_conn:
