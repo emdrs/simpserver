@@ -31,7 +31,6 @@ def route_get_callback(path: str, method: HTTPMethod) -> RouteCallback | None:
     return _routes[method][path]
 
 
-
 def route(path: str, method: HTTPMethod):
     def decorator(func: RouteCallback):
         sig = inspect.signature(func)
@@ -46,19 +45,14 @@ def route(path: str, method: HTTPMethod):
 
         @wraps(func)
         def wrapper(**kwargs) -> RouteCallbackReturn:
-            if not has_req:
-                kwargs.pop("req")
-
-            if not has_body:
-                kwargs.pop("body")
+            if not has_req: kwargs.pop("req")
+            if not has_body: kwargs.pop("body")
 
             if has_conn_or_cur: # If use cursor or connection, the commit() is executed automatically at the end.
                 conn, cur = get_connection_and_cursor()
 
-                if has_conn:
-                    kwargs["conn"] = conn
-                if has_cur:
-                    kwargs["cur"] = cur
+                if has_conn: kwargs["conn"] = conn
+                if has_cur: kwargs["cur"] = cur
 
                 """
                 This solves a bug that if get an error with opened connection, the
