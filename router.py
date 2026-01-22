@@ -14,12 +14,19 @@ RouteCallback = Callable[..., str | dict | list]
 
 
 def route_add(path: str, method: HTTPMethod, callback: RouteCallback) -> None:
-    _routes.setdefault(method, {})[path] = callback
+    if method not in _routes.keys():
+        _routes[method] = {path: callback}
+        return
+
+    if path in _routes[method].keys():
+        raise ValueError(f"Trying to add endpoint: {path} but already exists.")
+
+    _routes[method][path] = callback
 
 
 def route_get_callback(path: str, method: HTTPMethod) -> RouteCallback | None:
     if path not in _routes[method].keys():
-        return
+        return None
 
     return _routes[method][path]
 
@@ -46,10 +53,10 @@ def route(path: str, method: HTTPMethod):
                         response = func(**kwargs)
                         conn.commit() # Auto committing the db connection.
                         return response
+
             return func(**kwargs)
 
         route_add(path, method, wrapper)
-
         return wrapper
 
     return decorator
