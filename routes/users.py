@@ -14,8 +14,8 @@ def get_users(cur: Cursor) -> list[dict]:
     return [{"id": row[0], "name": row[1]} for row in rows]
 
 
-@ensure_body_keys({"name": str})
 @route("/users", HTTPMethod.POST)
+@ensure_body_keys({"name": str})
 def add_user(cur: Cursor, body: dict) -> dict:
     query = "INSERT INTO Users (name) VALUES (?)"
 
