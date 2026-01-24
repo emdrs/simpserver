@@ -98,8 +98,8 @@ def route(path: str, method: HTTPMethod):
         add_func_sig(callback)
         return wrapper
 
-
     return decorator
+
 
 def ensure_body_keys(keys: dict[str, type]):
     def decorator(func: RouteCallback):
