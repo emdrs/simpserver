@@ -45,6 +45,10 @@ class RequestHandler(BaseHTTPRequestHandler):
         self.send_response(HTTPStatus.OK)
         self.set_default_headers()
 
+        # DONT USE POSITIONAL ARGUMENTS, WILL NOT BE PASSED FORWARD.
+        # This is just in case you want to add some variables on route_callback.
+        # Aways use named parameters like below. Decorators handles just kwargs, not args.
+        # If you wanna add a decorator, i thinks is better keep this pattern.
         data = route_callback(req=self, body=self.get_body())
 
         if isinstance(data, (dict, list)):

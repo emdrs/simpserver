@@ -84,8 +84,6 @@ def safe_run(func: RouteCallback, params: dict) -> RouteCallbackReturn:
     return func(**params)
 
 
-
-
 def route(path: str, method: HTTPMethod):
     def decorator(func: RouteCallback):
         def wrapper(**kwargs) -> RouteCallbackReturn:
