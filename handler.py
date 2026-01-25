@@ -1,6 +1,5 @@
 from http import HTTPMethod, HTTPStatus
 from http.server import BaseHTTPRequestHandler, HTTPServer
-from socketserver import BaseServer
 import json
 import urllib.parse
 
@@ -10,7 +9,7 @@ from routes import *  # Registering routes
 
 
 class RequestHandler(BaseHTTPRequestHandler):
-    def __init__(self, request, client_address, server: BaseServer) -> None:
+    def __init__(self, request, client_address, server) -> None:
         super().__init__(request, client_address, server)
 
     def set_default_headers(self) -> None:
@@ -44,7 +43,7 @@ class RequestHandler(BaseHTTPRequestHandler):
 
         for param in params_list:
             name, value = param.split("=")
-            url_params[name] = urllib.parse.unquote(value)
+            url_params[name] = urllib.parse.unquote_plus(value)
 
         return url_params
 
@@ -66,7 +65,7 @@ class RequestHandler(BaseHTTPRequestHandler):
             # DONT USE POSITIONAL ARGUMENTS, WILL NOT BE PASSED FORWARD.
             # This is just in case you want to add some variables on route_callback.
             # Aways use named parameters like below. Decorators handles just kwargs, not args.
-            # If you wanna add a decorator, i think that is better keep this pattern.
+            # If you want to create a decorator, i think that is better keep this pattern.
             response = route_callback(req=self,
                                       body=self.get_body(),
                                       url_params=self.get_url_params())
@@ -80,10 +79,10 @@ class RequestHandler(BaseHTTPRequestHandler):
         self.send_response(status_code)
         self.set_default_headers()
 
-        if isinstance(response, (dict, list)):
-            response = json.dumps(response)
-        self.wfile.write(response.encode("utf-8"))
+        if isinstance(response, str):
+            response = {"message": response}
 
+        self.wfile.write(json.dumps(response).encode("utf-8"))
 
     def do_GET(self) -> None:
         self.run_route(HTTPMethod.GET)

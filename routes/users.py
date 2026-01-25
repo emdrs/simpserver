@@ -15,10 +15,10 @@ def get_users(cur: Cursor) -> list[dict]:
 
 
 @route("/users", HTTPMethod.POST)
-@ensure_body_keys({"name": int})
-def add_user(cur: Cursor, body: dict, url_params: dict) -> dict:
+@ensure_body_keys({"name": str})
+def add_user(cur: Cursor, body: dict) -> str:
     query = "INSERT INTO Users (name) VALUES (?)"
 
-    # cur.execute(query, (body["name"],))
+    cur.execute(query, (body["name"],))
 
-    return {"message": url_params}
+    return "Usuário criado com sucesso!"

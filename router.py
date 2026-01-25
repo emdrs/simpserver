@@ -3,7 +3,7 @@ from typing import Callable
 import inspect
 
 from database import get_connection_and_cursor
-from exceptions import BodyKeyTypeError, MissingBodyKeyError
+from exceptions import BodyKeyTypeError, BodyKeyMissingError
 
 
 _routes: dict[HTTPMethod, dict[str, Callable]] = {}
@@ -113,7 +113,7 @@ def ensure_body_keys(keys: dict[str, type]):
 
             for name, t in keys.items():
                 if name not in body_names:
-                    raise MissingBodyKeyError(name)
+                    raise BodyKeyMissingError(name)
                 if not isinstance(body[name], t):
                     raise BodyKeyTypeError(name, t)
 
