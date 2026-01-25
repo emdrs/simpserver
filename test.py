@@ -7,7 +7,7 @@ TODO:
     2. Create ensure body keys decorator. DONE.
     3. Get request params in url (GET Method). And decoding. DONE.
     4. Handle exceptions to return hints of errors and properly status code. DONE.
-    5. Create middleware decorator.
+    5. Create middleware decorator. DONE.
 """
 
 if len(argv) < 3 or not argv[2].isnumeric():
