@@ -133,7 +133,7 @@ def ensure_url_params(params: dict[str, type]):
                 if name not in url_params_names:
                     raise UrlParamMissingError(name)
                 try:
-                    t(url_params[name])
+                    url_params[name] = t(url_params[name])
                 except:
                     raise UrlParamTypeError(name, t)
 
