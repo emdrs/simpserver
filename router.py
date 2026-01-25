@@ -114,7 +114,9 @@ def ensure_body_keys(keys: dict[str, type]):
             for name, t in keys.items():
                 if name not in body_names:
                     raise BodyKeyMissingError(name)
-                if not isinstance(body[name], t):
+                try:
+                    body[name] = t(body[name])
+                except:
                     raise BodyKeyTypeError(name, t)
 
             return safe_run(func, kwargs)
@@ -122,6 +124,7 @@ def ensure_body_keys(keys: dict[str, type]):
         return wrapper
 
     return decorator
+
 
 def ensure_url_params(params: dict[str, type]):
     def decorator(func: RouteCallback):
