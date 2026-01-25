@@ -3,7 +3,7 @@ from typing import Callable
 import inspect
 
 from database import get_connection_and_cursor
-from exceptions import BodyKeyTypeError, BodyKeyMissingError
+from exceptions import BodyKeyTypeError, BodyKeyMissingError, UrlParamMissingError, UrlParamTypeError
 
 
 _routes: dict[HTTPMethod, dict[str, Callable]] = {}
@@ -116,6 +116,26 @@ def ensure_body_keys(keys: dict[str, type]):
                     raise BodyKeyMissingError(name)
                 if not isinstance(body[name], t):
                     raise BodyKeyTypeError(name, t)
+
+            return safe_run(func, kwargs)
+
+        return wrapper
+
+    return decorator
+
+def ensure_url_params(params: dict[str, type]):
+    def decorator(func: RouteCallback):
+        def wrapper(**kwargs) -> RouteCallbackReturn:
+            url_params = kwargs["url_params"]
+            url_params_names = url_params.keys()
+
+            for name, t in params.items():
+                if name not in url_params_names:
+                    raise UrlParamMissingError(name)
+                try:
+                    t(url_params[name])
+                except:
+                    raise UrlParamTypeError(name, t)
 
             return safe_run(func, kwargs)
 

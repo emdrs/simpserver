@@ -1,7 +1,7 @@
 from http import HTTPMethod
 from mariadb import Cursor
 
-from router import ensure_body_keys, route
+from router import ensure_body_keys, ensure_url_params, route
 
 
 @route("/users", HTTPMethod.GET)
@@ -13,6 +13,15 @@ def get_users(cur: Cursor) -> list[dict]:
 
     return [{"id": row[0], "name": row[1]} for row in rows]
 
+@route("/user", HTTPMethod.GET)
+@ensure_url_params({"id": int})
+def get_user(cur: Cursor, url_params: dict) -> list[dict]:
+    query = "SELECT * FROM Users WHERE id = ?"
+
+    cur.execute(query, (url_params["id"],))
+    rows = cur.fetchall()
+
+    return [{"id": row[0], "name": row[1]} for row in rows]
 
 @route("/users", HTTPMethod.POST)
 @ensure_body_keys({"name": str})

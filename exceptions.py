@@ -36,3 +36,9 @@ class UrlParamMissingError(BadRequestError):
 
     def __init__(self, param_name: str) -> None:
         super().__init__({"param_name": param_name})
+
+class UrlParamTypeError(BadRequestError):
+    """When a needed param in url is missing"""
+
+    def __init__(self, param_name: str, param_type: type) -> None:
+        super().__init__({"param_name": param_name, "type_needed": param_type.__name__})
