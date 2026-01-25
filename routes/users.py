@@ -1,6 +1,9 @@
 from http import HTTPMethod
 from mariadb import Cursor
+import string
+import random
 
+from exceptions import CredentialsError
 from router import ensure_body_keys, ensure_url_params, route
 
 
@@ -23,11 +26,31 @@ def get_user(cur: Cursor, url_params: dict) -> list[dict]:
 
     return [{"id": row[0], "name": row[1]} for row in rows]
 
-@route("/users", HTTPMethod.POST)
-@ensure_body_keys({"name": str})
+@route("/register", HTTPMethod.POST)
+@ensure_body_keys({"name": str, "password": str})
 def add_user(cur: Cursor, body: dict) -> str:
-    query = "INSERT INTO Users (name) VALUES (?)"
+    query = "INSERT INTO Users (name, password) VALUES (?, ?)"
 
-    cur.execute(query, (body["name"],))
+    cur.execute(query, (body["name"], body["password"]))
 
     return "Usuário criado com sucesso!"
+
+letters_of_token = string.ascii_letters + string.digits + string.punctuation
+logins = {}
+
+@route("/login", HTTPMethod.POST)
+@ensure_body_keys({"name": str, "password": str})
+def login(cur: Cursor, body: dict) -> dict:
+    query = "SELECT * FROM Users WHERE name = ? AND password = ?"
+
+    cur.execute(query, (body["name"], body["password"]))
+
+    user = cur.fetchone()
+
+    if not user:
+        raise CredentialsError()
+
+    token = "".join(random.sample(letters_of_token, 3))
+    logins[user[0]] = token
+
+    return {"token": token}
