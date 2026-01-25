@@ -40,6 +40,7 @@ class FunctionSignature:
         self.has_req         = "req"  in self.params_names
         self.has_body        = "body" in self.params_names
         self.has_kwargs      = "body" in self.params_names
+        self.has_url_params  = "url_params" in self.params_names
 
 unsafe_functions: dict[RouteCallback, FunctionSignature] = {}
 
@@ -63,6 +64,7 @@ def safe_run(func: RouteCallback, params: dict) -> RouteCallbackReturn:
     func_sig = unsafe_functions[func]
     if not func_sig.has_req: params.pop("req")
     if not func_sig.has_body: params.pop("body")
+    if not func_sig.has_url_params: params.pop("url_params")
 
     if func_sig.has_conn_or_cur: # If use cursor or connection, the commit() is executed automatically at the end.
         conn, cur = get_connection_and_cursor()
@@ -87,6 +89,7 @@ def safe_run(func: RouteCallback, params: dict) -> RouteCallbackReturn:
 def route(path: str, method: HTTPMethod):
     def decorator(func: RouteCallback):
         def wrapper(**kwargs) -> RouteCallbackReturn:
+
             return safe_run(func, kwargs)
 
         route_add(path, method, wrapper)
