@@ -3,7 +3,13 @@ from typing import Callable
 import inspect
 
 from database import get_connection_and_cursor
-from exceptions import BodyKeyTypeError, BodyKeyMissingError, CredentialsError, InvalidTokenError, UrlParamMissingError, UrlParamTypeError
+from exceptions import (
+    BodyKeyTypeError,
+    BodyKeyMissingError,
+    InvalidTokenError,
+    UrlParamMissingError,
+    UrlParamTypeError,
+)
 
 
 _routes: dict[HTTPMethod, dict[str, Callable]] = {}
@@ -90,7 +96,6 @@ def safe_run(func: RouteCallback, params: dict) -> RouteCallbackReturn:
 def route(path: str, method: HTTPMethod):
     def decorator(func: RouteCallback):
         def wrapper(**kwargs) -> RouteCallbackReturn:
-
             return safe_run(func, kwargs)
 
         route_add(path, method, wrapper)
