@@ -4,7 +4,8 @@ from socketserver import BaseServer
 import json
 import urllib.parse
 
-from router import route_get_callback
+from exceptions import APIError
+from router import RouteCallbackReturn, route_get_callback
 from routes import *  # Registering routes
 
 
@@ -59,21 +60,30 @@ class RequestHandler(BaseHTTPRequestHandler):
             self.set_default_headers()
             return
 
-        self.send_response(HTTPStatus.OK)
+        status_code = HTTPStatus.OK
+        response: RouteCallbackReturn
+        try:
+            # DONT USE POSITIONAL ARGUMENTS, WILL NOT BE PASSED FORWARD.
+            # This is just in case you want to add some variables on route_callback.
+            # Aways use named parameters like below. Decorators handles just kwargs, not args.
+            # If you wanna add a decorator, i think that is better keep this pattern.
+            response = route_callback(req=self,
+                                      body=self.get_body(),
+                                      url_params=self.get_url_params())
+        except APIError as api_error:
+            status_code = api_error.status_code
+            response = api_error.response
+        except:
+            status_code = HTTPStatus.INTERNAL_SERVER_ERROR
+            response = {"error": "Internal error"}
+
+        self.send_response(status_code)
         self.set_default_headers()
 
-        # DONT USE POSITIONAL ARGUMENTS, WILL NOT BE PASSED FORWARD.
-        # This is just in case you want to add some variables on route_callback.
-        # Aways use named parameters like below. Decorators handles just kwargs, not args.
-        # If you wanna add a decorator, i think that is better keep this pattern.
-        data = route_callback(req=self,
-                              body=self.get_body(),
-                              url_params=self.get_url_params())
+        if isinstance(response, (dict, list)):
+            response = json.dumps(response)
+        self.wfile.write(response.encode("utf-8"))
 
-        if isinstance(data, (dict, list)):
-            data = json.dumps(data)
-
-        self.wfile.write(data.encode("utf-8"))
 
     def do_GET(self) -> None:
         self.run_route(HTTPMethod.GET)
