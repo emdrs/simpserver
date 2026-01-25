@@ -48,6 +48,11 @@ class RequestHandler(BaseHTTPRequestHandler):
 
         return url_params
 
+    def get_user_info(self, body: dict) -> dict | None:
+        if "token" not in body.keys():
+            return None
+        # This needs connection and cursor, so, probably this will be inside a decorator.
+
     def run_route(self, method: HTTPMethod) -> None:
         path = self.path
         if "?" in path:
@@ -63,13 +68,17 @@ class RequestHandler(BaseHTTPRequestHandler):
         status_code = HTTPStatus.OK
         response: RouteCallbackReturn
         try:
+            body = self.get_body()
+            url_params = self.get_url_params()
+            user_info = self.get_user_info(body)
             # DONT USE POSITIONAL ARGUMENTS, WILL NOT BE PASSED FORWARD.
             # This is just in case you want to add some variables on route_callback.
             # Aways use named parameters like below. Decorators handles just kwargs, not args.
             # If you want to create a decorator, i think that is better keep this pattern.
             response = route_callback(req=self,
-                                      body=self.get_body(),
-                                      url_params=self.get_url_params())
+                                      body=body,
+                                      url_params=url_params,
+                                      user_info=user_info)
         except APIError as api_error:
             status_code = api_error.status_code
             response = api_error.response
