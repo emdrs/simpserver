@@ -5,8 +5,8 @@ from handler import serve_api
 TODO:
     1. Get request body data. DONE.
     2. Create ensure body keys decorator. DONE.
-    3. Get request params in url (GET Method). DONE. And decoding.
-    4. Handle exceptions to return hints of errors and properly status code..
+    3. Get request params in url (GET Method). And decoding. DONE.
+    4. Handle exceptions to return hints of errors and properly status code. DONE.
     5. Create middleware decorator.
 """
 
