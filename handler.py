@@ -2,6 +2,7 @@ from http import HTTPMethod, HTTPStatus
 from http.server import BaseHTTPRequestHandler, HTTPServer
 import json
 import urllib.parse
+import traceback
 
 from exceptions import APIError
 from router import RouteCallbackReturn, route_get_callback
@@ -74,6 +75,7 @@ class RequestHandler(BaseHTTPRequestHandler):
             response = api_error.response
         except:
             status_code = HTTPStatus.INTERNAL_SERVER_ERROR
+            print(traceback.format_exc())
             response = {"error": "Internal error"}
 
         self.send_response(status_code)
