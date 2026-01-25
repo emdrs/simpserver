@@ -42,3 +42,9 @@ class UrlParamTypeError(BadRequestError):
 
     def __init__(self, param_name: str, param_type: type) -> None:
         super().__init__({"param_name": param_name, "type_needed": param_type.__name__})
+
+class CredentialsError(APIError):
+    """When a login error occours"""
+
+    def __init__(self, ) -> None:
+        super().__init__(HTTPStatus.NOT_FOUND, {"message": "Wrong credentials"})
