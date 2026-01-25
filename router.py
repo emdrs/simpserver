@@ -3,7 +3,7 @@ from typing import Callable
 import inspect
 
 from database import get_connection_and_cursor
-from exceptions import BodyKeyTypeError, BodyKeyMissingError, CredentialsError, UrlParamMissingError, UrlParamTypeError
+from exceptions import BodyKeyTypeError, BodyKeyMissingError, CredentialsError, InvalidTokenError, UrlParamMissingError, UrlParamTypeError
 
 
 _routes: dict[HTTPMethod, dict[str, Callable]] = {}
@@ -151,7 +151,7 @@ def middleware():
             from routes.users import logins
 
             if kwargs["body"]["token"] not in logins.keys():
-                raise CredentialsError()
+                raise InvalidTokenError()
 
             return safe_run(func, kwargs)
 

@@ -48,3 +48,9 @@ class CredentialsError(APIError):
 
     def __init__(self, ) -> None:
         super().__init__(HTTPStatus.NOT_FOUND, {"message": "Wrong credentials"})
+
+class InvalidTokenError(APIError):
+    """When a passed token does not exists"""
+
+    def __init__(self, ) -> None:
+        super().__init__(HTTPStatus.UNAUTHORIZED, {"message": "Invalid token"})
