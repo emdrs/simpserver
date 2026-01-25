@@ -3,7 +3,7 @@ from typing import Callable
 import inspect
 
 from database import get_connection_and_cursor
-from exceptions import BodyKeyTypeError, BodyKeyMissingError, UrlParamMissingError, UrlParamTypeError
+from exceptions import BodyKeyTypeError, BodyKeyMissingError, CredentialsError, UrlParamMissingError, UrlParamTypeError
 
 
 _routes: dict[HTTPMethod, dict[str, Callable]] = {}
@@ -112,12 +112,10 @@ def ensure_body_keys(keys: dict[str, type]):
             body_names = body.keys()
 
             for name, t in keys.items():
-                if name not in body_names:
-                    raise BodyKeyMissingError(name)
-                try:
-                    body[name] = t(body[name])
-                except:
-                    raise BodyKeyTypeError(name, t)
+                if name not in body_names: raise BodyKeyMissingError(name)
+
+                try: body[name] = t(body[name])
+                except: raise BodyKeyTypeError(name, t)
 
             return safe_run(func, kwargs)
 
@@ -139,6 +137,21 @@ def ensure_url_params(params: dict[str, type]):
                     url_params[name] = t(url_params[name])
                 except:
                     raise UrlParamTypeError(name, t)
+
+            return safe_run(func, kwargs)
+
+        return wrapper
+
+    return decorator
+
+def middleware():
+    def decorator(func: RouteCallback):
+        @ensure_body_keys({"token": str})
+        def wrapper(**kwargs) -> RouteCallbackReturn:
+            from routes.users import logins
+
+            if kwargs["body"]["token"] not in logins.keys():
+                raise CredentialsError()
 
             return safe_run(func, kwargs)
 

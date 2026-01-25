@@ -4,7 +4,7 @@ import string
 import random
 
 from exceptions import CredentialsError
-from router import ensure_body_keys, ensure_url_params, route
+from router import ensure_body_keys, ensure_url_params, middleware, route
 
 
 @route("/users", HTTPMethod.GET)
@@ -51,6 +51,16 @@ def login(cur: Cursor, body: dict) -> dict:
         raise CredentialsError()
 
     token = "".join(random.sample(letters_of_token, 3))
-    logins[user[0]] = token
+    logins[token] = user[0]
 
     return {"token": token}
+
+@route("/user-all", HTTPMethod.POST)
+@middleware()
+def get_user_all(cur: Cursor, body: dict) -> dict:
+    query = "SELECT * FROM Users WHERE id = ?"
+
+    cur.execute(query, (logins[body["token"]],))
+    row = cur.fetchone()
+
+    return {"id": row[0], "name": row[1], "password": row[2]}
