@@ -6,7 +6,6 @@ import traceback
 
 from exceptions import APIError
 from router import RouteCallbackReturn, route_get_callback
-from routes import *  # Registering routes
 
 
 class RequestHandler(BaseHTTPRequestHandler):
