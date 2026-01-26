@@ -48,6 +48,7 @@ class FunctionSignature:
         self.has_body        = "body" in self.params_names
         self.has_kwargs      = "body" in self.params_names
         self.has_url_params  = "url_params" in self.params_names
+        self.has_user_info   = "user_info" in self.params_names
 
 unsafe_functions: dict[RouteCallback, FunctionSignature] = {}
 
@@ -72,8 +73,13 @@ def safe_run(func: RouteCallback, params: dict) -> RouteCallbackReturn:
     if not func_sig.has_req: params.pop("req")
     if not func_sig.has_body: params.pop("body")
     if not func_sig.has_url_params: params.pop("url_params")
+    if not func_sig.has_user_info: params.pop("user_info", None)
+    else:
+        if not func_sig.has_conn: params.pop("conn")
+        if not func_sig.has_cur: params.pop("cur")
 
-    if func_sig.has_conn_or_cur: # If use cursor or connection, the commit() is executed automatically at the end.
+    # If use cursor or connection, the commit() is executed automatically at the end.
+    if func_sig.has_conn_or_cur and not func_sig.has_user_info:
         conn, cur = get_connection_and_cursor()
 
         if func_sig.has_conn: params["conn"] = conn
@@ -157,6 +163,22 @@ def middleware():
 
             if kwargs["body"]["token"] not in logins.keys():
                 raise InvalidTokenError()
+
+            func_sig = unsafe_functions[func]
+
+            if func_sig.has_user_info:
+                conn, cur = get_connection_and_cursor()
+                kwargs["conn"] = conn
+                kwargs["cur"] = cur
+
+                cur.execute("SELECT * FROM Users WHERE id = ?", (logins[kwargs["body"]["token"]],))
+                row = cur.fetchone()
+
+                kwargs["user_info"] = {"id": row[0], "name": row[1], "password": row[2]}
+
+                with conn: 
+                    with cur:
+                        return safe_run(func, kwargs)
 
             return safe_run(func, kwargs)
 

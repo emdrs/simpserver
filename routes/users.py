@@ -57,10 +57,10 @@ def login(cur: Cursor, body: dict) -> dict:
 
 @route("/user-all", HTTPMethod.POST)
 @middleware()
-def get_user_all(cur: Cursor, body: dict) -> dict:
+def get_user_all(cur: Cursor, body: dict, user_info: dict) -> dict:
     query = "SELECT * FROM Users WHERE id = ?"
 
-    cur.execute(query, (logins[body["token"]],))
-    row = cur.fetchone()
+    # cur.execute(query, (logins[body["token"]],))
+    # row = cur.fetchone()
 
-    return {"id": row[0], "name": row[1], "password": row[2]}
+    return user_info
