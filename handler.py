@@ -4,8 +4,8 @@ import json
 import urllib.parse
 import traceback
 
-from exceptions import APIError
-from router import RouteCallbackReturn, route_get_callback
+from .exceptions import APIError
+from .router import RouteCallbackReturn, route_get_callback
 
 
 class RequestHandler(BaseHTTPRequestHandler):

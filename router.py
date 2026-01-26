@@ -2,8 +2,8 @@ from http import HTTPMethod
 from typing import Callable
 import inspect
 
-from database import get_connection_and_cursor
-from exceptions import (
+from .database import get_connection_and_cursor
+from .exceptions import (
     BodyKeyTypeError,
     BodyKeyMissingError,
     InvalidTokenError,
