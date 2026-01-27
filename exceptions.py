@@ -54,3 +54,9 @@ class InvalidTokenError(APIError):
 
     def __init__(self, ) -> None:
         super().__init__(HTTPStatus.UNAUTHORIZED, {"message": "Invalid token"})
+
+class TimeoutError(APIError):
+    """When lost much time in an action"""
+
+    def __init__(self, ) -> None:
+        super().__init__(HTTPStatus.REQUEST_TIMEOUT, {"message": "Timeout"})

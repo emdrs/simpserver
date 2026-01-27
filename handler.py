@@ -3,9 +3,15 @@ from http.server import BaseHTTPRequestHandler, HTTPServer
 import json
 import urllib.parse
 import traceback
+import signal
 
 from .exceptions import APIError
 from .router import RouteCallbackReturn, route_get_callback
+
+def timeout_handler(signum, frame):
+    raise TimeoutError()
+
+signal.signal(signal.SIGALRM, timeout_handler)
 
 
 class RequestHandler(BaseHTTPRequestHandler):
@@ -23,7 +29,9 @@ class RequestHandler(BaseHTTPRequestHandler):
 
     def get_body(self) -> dict:
         content_length = int(self.headers.get("Content-Length", 0))
+        signal.setitimer(signal.ITIMER_REAL, 0.01, 0)
         body_data = self.rfile.read(content_length).decode("utf-8")
+        signal.setitimer(signal.ITIMER_REAL, 0)
 
         if not body_data: return {}
 
