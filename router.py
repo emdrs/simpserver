@@ -14,8 +14,10 @@ from .exceptions import (
 
 _routes: dict[HTTPMethod, dict[str, Callable]] = {}
 
+class html(str): pass
+
 # Parameters is Any | None.
-RouteCallbackReturn = str | dict | list
+RouteCallbackReturn = str | dict | list | html
 RouteCallback = Callable[..., RouteCallbackReturn]
 
 

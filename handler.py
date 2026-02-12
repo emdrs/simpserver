@@ -6,7 +6,7 @@ import traceback
 import signal
 
 from .exceptions import APIError
-from .router import RouteCallbackReturn, route_get_callback
+from .router import RouteCallbackReturn, html, route_get_callback
 
 def timeout_handler(signum, frame):
     raise TimeoutError()
@@ -87,6 +87,10 @@ class RequestHandler(BaseHTTPRequestHandler):
 
         self.send_response(status_code)
         self.set_default_headers()
+
+        if isinstance(response, html):
+            self.wfile.write(response.encode("utf-8"))
+            return
 
         if isinstance(response, str):
             response = {"message": response}
