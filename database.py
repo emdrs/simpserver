@@ -1,13 +1,24 @@
 import mariadb
-from os import environ
 
 DB_CONFIG = {
-    "host": environ.get("DB_HOST", "127.0.0.1"),
-    "port": int(environ.get("DB_PORT", 3306)),
-    "user": environ.get("DB_USER", "root"),
-    "password": environ.get("DB_PASSWORD", "pass"),
-    "database": environ.get("DB_NAME", "teste"),
+    "host"    : "",
+    "port"    : "",
+    "user"    : "",
+    "password": "",
+    "database": "",
 }
+
+
+def set_db_config(host: str, port: int, user: str, password: str, database: str) -> None:
+    global DB_CONFIG
+
+    DB_CONFIG = {
+        "host"    : host,
+        "port"    : port,
+        "user"    : user,
+        "password": password,
+        "database": database,
+    }
 
 
 def get_connection_and_cursor() -> tuple[mariadb.Connection, mariadb.Cursor]:
