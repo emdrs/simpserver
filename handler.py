@@ -95,7 +95,7 @@ class RequestHandler(BaseHTTPRequestHandler):
         if isinstance(response, str):
             response = {"message": response}
 
-        self.wfile.write(json.dumps(response).encode("utf-8"))
+        self.wfile.write(json.dumps(response, ensure_ascii=False).encode("utf-8"))
 
     def do_GET(self) -> None:
         self.run_route(HTTPMethod.GET)
