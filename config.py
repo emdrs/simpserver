@@ -19,13 +19,8 @@ user_config_module: ModuleType | None = None
 try:
     user_config_module = importlib.import_module('config')
 
-    print(os.getcwd())
-
-    print(user_config_module)
     for config in user_configs.keys():
-        print(config)
         if hasattr(user_config_module, config):
-            print("tem")
             user_configs[config] = getattr(user_config_module, config)
 except:
     user_settings = None
