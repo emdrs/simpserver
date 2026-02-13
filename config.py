@@ -1,0 +1,32 @@
+import importlib
+import sys
+import os
+from types import ModuleType
+
+sys.path.append(os.getcwd())
+
+user_configs = {
+    "DB_CONFIG": {
+        "host": "127.0.0.1",
+        "port": 3306,
+        "user": "root",
+        "password": ""
+    }
+}
+
+user_config_module: ModuleType | None = None
+
+try:
+    user_config_module = importlib.import_module('config')
+
+    print(os.getcwd())
+
+    print(user_config_module)
+    for config in user_configs.keys():
+        print(config)
+        if hasattr(user_config_module, config):
+            print("tem")
+            user_configs[config] = getattr(user_config_module, config)
+except:
+    user_settings = None
+
