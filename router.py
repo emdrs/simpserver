@@ -147,7 +147,7 @@ def ensure_exists_in_db_by_body(table: str, pk_name: str, body_key_pk_value: str
             cur.execute(f"SELECT * FROM {table} WHERE {pk_name} = ?",
                         (body[body_key_pk_value],))
 
-            if not cur.fetchone(): raise DoNotExistsInDatabaseError("Users")
+            if not cur.fetchone(): raise DoNotExistsInDatabaseError(table)
 
             return safe_run(func, kwargs | {"cur": cur, "body": body})
 
