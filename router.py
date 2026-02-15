@@ -3,13 +3,7 @@ from typing import Callable
 import inspect
 
 from .database import get_connection_and_cursor
-from .exceptions import (
-    BodyKeyTypeError,
-    BodyKeyMissingError,
-    InvalidTokenError,
-    UrlParamMissingError,
-    UrlParamTypeError,
-)
+from .exceptions import *
 
 
 _routes: dict[HTTPMethod, dict[str, Callable]] = {}
@@ -43,49 +37,45 @@ class FunctionSignature:
     def __init__(self, func: RouteCallback) -> None:
         self.sig             = inspect.signature(func)
         self.params_names    = self.sig.parameters.keys()
-        self.has_conn        = "conn" in self.params_names
-        self.has_cur         = "cur"  in self.params_names
+        self.has_conn        = "conn"        in self.params_names
+        self.has_cur         = "cur"         in self.params_names
         self.has_conn_or_cur = self.has_conn or self.has_cur
-        self.has_req         = "req"  in self.params_names
-        self.has_body        = "body" in self.params_names
-        self.has_kwargs      = "body" in self.params_names
-        self.has_url_params  = "url_params" in self.params_names
-        self.has_user_info   = "user_info" in self.params_names
+        self.has_req         = "req"         in self.params_names
+        self.has_body        = "body"        in self.params_names
+        self.has_kwargs      = "body"        in self.params_names
+        self.has_url_params  = "url_params"  in self.params_names
+        self.has_user_info   = "user_info"   in self.params_names
+
 
 unsafe_functions: dict[RouteCallback, FunctionSignature] = {}
 
 
-def add_func_sig(func: RouteCallback) -> None:
-    if func in unsafe_functions.keys():
-        print("[WARNIG] - (Re)adding func to func_signatures")
-
-    func_sig = FunctionSignature(func)
-
-    for t in func_sig.sig.parameters.values():
-        if t.kind == inspect.Parameter.VAR_KEYWORD:
-            return
-
-    unsafe_functions[func] = func_sig
-
 def safe_run(func: RouteCallback, params: dict) -> RouteCallbackReturn:
-    if func not in unsafe_functions.keys():
-        return func(**params)
+    if func not in unsafe_functions:
+        unsafe_functions[func] = FunctionSignature(func)
 
     func_sig = unsafe_functions[func]
-    if not func_sig.has_req: params.pop("req")
-    if not func_sig.has_body: params.pop("body")
-    if not func_sig.has_url_params: params.pop("url_params")
-    if not func_sig.has_user_info: params.pop("user_info", None)
-    else:
-        if not func_sig.has_conn: params.pop("conn")
-        if not func_sig.has_cur: params.pop("cur")
 
-    # If use cursor or connection, the commit() is executed automatically at the end.
-    if func_sig.has_conn_or_cur and not func_sig.has_user_info:
+    if func.__closure__ == None:
+        if not func_sig.has_req       : params.pop("req")
+        if not func_sig.has_body      : params.pop("body")
+        if not func_sig.has_url_params: params.pop("url_params")
+        if not func_sig.has_user_info : params.pop("user_info", None)
+        if not func_sig.has_conn      : params.pop("conn", None)
+        if not func_sig.has_cur       : params.pop("cur", None)
+
+    # TODO: Check user_info breaks this below
+    if (
+        func_sig.has_conn_or_cur    and
+        "conn" not in params.keys() and
+        "cur"  not in params.keys() and
+        not func_sig.has_user_info
+    ):
+
         conn, cur = get_connection_and_cursor()
 
         if func_sig.has_conn: params["conn"] = conn
-        if func_sig.has_cur: params["cur"] = cur
+        if func_sig.has_cur : params["cur"]  = cur
 
         """
         This solves a bug that if get an error with opened connection, the
@@ -94,8 +84,6 @@ def safe_run(func: RouteCallback, params: dict) -> RouteCallbackReturn:
         with conn: 
             with cur:
                 response = func(**params)
-
-                conn.commit() # Auto committing the db connection.
                 return response
 
     return func(**params)
@@ -107,12 +95,6 @@ def route(path: str, method: HTTPMethod):
             return safe_run(func, kwargs)
 
         route_add(path, method, wrapper)
-
-        callback = func
-        while callback.__closure__ != None:
-            callback = callback.__closure__[0].cell_contents
-
-        add_func_sig(callback)
         return wrapper
 
     return decorator
@@ -152,6 +134,22 @@ def ensure_url_params(params: dict[str, type]):
                     raise UrlParamTypeError(name, t)
 
             return safe_run(func, kwargs)
+
+        return wrapper
+
+    return decorator
+
+
+def ensure_exists_in_db_by_body(table: str, pk_name: str, body_key_pk_value: str):
+    def decorator(func: RouteCallback):
+        @ensure_body_keys({body_key_pk_value: str})
+        def wrapper(cur, body, **kwargs) -> RouteCallbackReturn:
+            cur.execute(f"SELECT * FROM {table} WHERE {pk_name} = ?",
+                        (body[body_key_pk_value],))
+
+            if not cur.fetchone(): raise DoNotExistsInDatabaseError("Users")
+
+            return safe_run(func, kwargs | {"cur": cur, "body": body})
 
         return wrapper
 
