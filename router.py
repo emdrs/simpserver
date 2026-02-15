@@ -74,8 +74,13 @@ def safe_run(func: RouteCallback, params: dict) -> RouteCallbackReturn:
 
         conn, cur = get_connection_and_cursor()
 
-        if func_sig.has_conn: params["conn"] = conn
-        if func_sig.has_cur : params["cur"]  = cur
+        if func.__closure__ == None:
+            if func_sig.has_conn: params["conn"] = conn
+            if func_sig.has_cur : params["cur"]  = cur
+        else:
+            params["conn"] = conn
+            params["cur"]  = cur
+
 
         """
         This solves a bug that if get an error with opened connection, the
