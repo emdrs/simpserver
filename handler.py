@@ -4,6 +4,7 @@ import json
 import urllib.parse
 import traceback
 import signal
+from datetime import datetime
 
 from .exceptions import APIError
 from .router import RouteCallbackReturn, html, route_get_callback
@@ -12,6 +13,13 @@ def timeout_handler(signum, frame):
     raise TimeoutError()
 
 signal.signal(signal.SIGALRM, timeout_handler)
+
+class SimpleEncoder(json.JSONEncoder):
+    def default(self, o):
+        if isinstance(o, datetime):
+            return o.isoformat()
+
+        return json.JSONEncoder.default(self, o)
 
 
 class RequestHandler(BaseHTTPRequestHandler):
@@ -95,7 +103,9 @@ class RequestHandler(BaseHTTPRequestHandler):
         if isinstance(response, str):
             response = {"message": response}
 
-        self.wfile.write(json.dumps(response, ensure_ascii=False).encode("utf-8"))
+        self.wfile.write(json.dumps(response,
+                                    ensure_ascii=False,
+                                    cls=SimpleEncoder).encode("utf-8"))
 
     def do_GET(self) -> None:
         self.run_route(HTTPMethod.GET)
