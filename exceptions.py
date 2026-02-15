@@ -46,17 +46,24 @@ class UrlParamTypeError(BadRequestError):
 class CredentialsError(APIError):
     """When a login error occours"""
 
-    def __init__(self, ) -> None:
+    def __init__(self) -> None:
         super().__init__(HTTPStatus.NOT_FOUND, {"message": "Wrong credentials"})
 
 class InvalidTokenError(APIError):
     """When a passed token does not exists"""
 
-    def __init__(self, ) -> None:
+    def __init__(self) -> None:
         super().__init__(HTTPStatus.UNAUTHORIZED, {"message": "Invalid token"})
 
 class TimeoutError(APIError):
     """When lost much time in an action"""
 
-    def __init__(self, ) -> None:
+    def __init__(self) -> None:
         super().__init__(HTTPStatus.REQUEST_TIMEOUT, {"message": "Timeout"})
+
+class DoNotExistsInDatabaseError(APIError):
+    """When something do not exists in database"""
+
+    def __init__(self, table_name: str) -> None:
+        super().__init__(HTTPStatus.BAD_REQUEST,
+                         {"message": f"Invalid primary key of {table_name}"})
