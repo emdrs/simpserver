@@ -23,5 +23,5 @@ try:
         if hasattr(user_config_module, config):
             user_configs[config] = getattr(user_config_module, config)
 except:
-    user_settings = None
+    user_configs = None
 
