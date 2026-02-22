@@ -11,7 +11,9 @@ user_configs = {
         "port": 3306,
         "user": "root",
         "password": ""
-    }
+    },
+    "static_path": None,
+    "static_url": "/static/"
 }
 
 user_config_module: ModuleType | None = None
