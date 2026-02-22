@@ -7,7 +7,8 @@ import signal
 from datetime import datetime
 
 from .exceptions import APIError
-from .router import RouteCallbackReturn, html, route_get_callback
+from .router import Route, RouteCallbackReturn, html, route, get_route_info
+from .config import user_configs
 
 def timeout_handler(signum, frame):
     raise TimeoutError()
@@ -63,14 +64,28 @@ class RequestHandler(BaseHTTPRequestHandler):
 
         return url_params
 
+
+    def get_path_params(self, route_info: Route) -> dict:
+        if not route_info.path_params:
+            return {}
+
+        compatible_types = {"int": int, "str": str, "float": float}
+        data_start_index = route_info.path.find(".*")
+
+        return {
+            param_name: compatible_types[param_type](self.path[data_start_index:])
+            for param_name, param_type in route_info.path_params.items()
+        }
+
+
     def run_route(self, method: HTTPMethod) -> None:
         path = self.path
         if "?" in path:
             path = path.split("?")[0]
 
-        route_callback = route_get_callback(path, method)
+        route_info = get_route_info(path, method)
 
-        if not route_callback:
+        if not route_info:
             self.send_response(HTTPStatus.NOT_FOUND)
             self.set_default_headers()
             return
@@ -82,9 +97,16 @@ class RequestHandler(BaseHTTPRequestHandler):
             # This is just in case you want to add some variables on route_callback.
             # Aways use named parameters like below. Decorators handles just kwargs, not args.
             # If you want to create a decorator, i think that is better keep this pattern.
-            response = route_callback(req=self,
-                                      body=self.get_body(),
-                                      url_params=self.get_url_params())
+            kwargs = {
+                "req"       :self,
+                "body"      :self.get_body(),
+                "url_params":self.get_url_params()
+            }
+
+            if route_info.path_params:
+                kwargs["path_params"] = self.get_path_params(route_info)
+
+            response = route_info.callback(**kwargs)
         except APIError as api_error:
             status_code = api_error.status_code
             response = api_error.response

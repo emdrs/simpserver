@@ -1,12 +1,29 @@
 from http import HTTPMethod
-from typing import Callable
+from typing import Any, Callable
 import inspect
+import re
 
 from .database import get_connection_and_cursor
 from .exceptions import *
 
 
-_routes: dict[HTTPMethod, dict[str, Callable]] = {}
+class Route:
+    def __init__(self, original_path: str, callback: RouteCallback) -> None:
+        self.original_path = original_path
+        self.callback = callback
+        self.path = original_path
+        self.path_params: dict | None = None
+
+        re_search = re.search("<.*:.*>", self.path)
+        re_split = re.split("<.*:.*>", self.path)
+
+        if re_search:
+            self.path = ".*".join(re_split)
+            param_name, param_type = re_search.group(0)[1:-1].split(":")
+            self.path_params = {param_name: param_type}
+
+
+_routes: dict[HTTPMethod, dict[str, Route]] = {}
 
 class html(str): pass
 
@@ -17,17 +34,24 @@ RouteCallback = Callable[..., RouteCallbackReturn]
 
 def route_add(path: str, method: HTTPMethod, callback: RouteCallback) -> None:
     if method not in _routes.keys():
-        _routes[method] = {path: callback}
-        return
+        _routes[method] = {}
 
     if path in _routes[method].keys():
         raise ValueError(f"Trying to add endpoint: {path} but already exists.")
 
-    _routes[method][path] = callback
+    route = Route(path, callback)
+
+    _routes[method][route.path] = route
 
 
-def route_get_callback(path: str, method: HTTPMethod) -> RouteCallback | None:
-    if method not in _routes.keys() or path not in _routes[method].keys():
+def get_route_info(path: str, method: HTTPMethod) -> Route | None:
+    if method not in _routes.keys():
+        return None
+
+    if path not in _routes[method].keys():
+        for route_path in _routes[method].keys():
+            if re.search(route_path, path):
+                return _routes[method][route_path]
         return None
 
     return _routes[method][path]
