@@ -69,6 +69,7 @@ class FunctionSignature:
         self.has_kwargs      = "body"        in self.params_names
         self.has_url_params  = "url_params"  in self.params_names
         self.has_user_info   = "user_info"   in self.params_names
+        self.has_path_params = "path_params" in self.params_names
 
 
 unsafe_functions: dict[RouteCallback, FunctionSignature] = {}
@@ -81,12 +82,13 @@ def safe_run(func: RouteCallback, params: dict) -> RouteCallbackReturn:
     func_sig = unsafe_functions[func]
 
     if func.__closure__ == None:
-        if not func_sig.has_req       : params.pop("req")
-        if not func_sig.has_body      : params.pop("body")
-        if not func_sig.has_url_params: params.pop("url_params")
-        if not func_sig.has_user_info : params.pop("user_info", None)
-        if not func_sig.has_conn      : params.pop("conn", None)
-        if not func_sig.has_cur       : params.pop("cur", None)
+        if not func_sig.has_req        : params.pop("req")
+        if not func_sig.has_body       : params.pop("body")
+        if not func_sig.has_url_params : params.pop("url_params")
+        if not func_sig.has_user_info  : params.pop("user_info", None)
+        if not func_sig.has_conn       : params.pop("conn", None)
+        if not func_sig.has_cur        : params.pop("cur", None)
+        if not func_sig.has_path_params: params.pop("path_params", None)
 
     # TODO: Check user_info breaks this below
     if (
