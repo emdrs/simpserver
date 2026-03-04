@@ -13,7 +13,8 @@ user_configs = {
         "password": ""
     },
     "static_path": None,
-    "static_url": "/static/"
+    "static_url": "/static/",
+    "login_check_func": None
 }
 
 user_config_module: ModuleType | None = None
