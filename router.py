@@ -3,7 +3,6 @@ from typing import Any, Callable
 import inspect
 import re
 
-from .database import get_connection_and_cursor
 from .exceptions import *
 
 
@@ -60,13 +59,17 @@ def get_route_info(path: str, method: HTTPMethod) -> Route | None:
 class FunctionSignature:
     def __init__(self, func: RouteCallback) -> None:
         self.sig             = inspect.signature(func)
+        params = self.sig.parameters
         self.params_names    = self.sig.parameters.keys()
         self.has_conn        = "conn"        in self.params_names
         self.has_cur         = "cur"         in self.params_names
         self.has_conn_or_cur = self.has_conn or self.has_cur
         self.has_req         = "req"         in self.params_names
         self.has_body        = "body"        in self.params_names
-        self.has_kwargs      = "body"        in self.params_names
+        self.has_kwargs      = any(
+            p.kind == inspect.Parameter.VAR_KEYWORD 
+            for p in params.values()
+        )
         self.has_url_params  = "url_params"  in self.params_names
         self.has_user_info   = "user_info"   in self.params_names
         self.has_path_params = "path_params" in self.params_names
@@ -81,7 +84,7 @@ def safe_run(func: RouteCallback, params: dict) -> RouteCallbackReturn:
 
     func_sig = unsafe_functions[func]
 
-    if func.__closure__ == None:
+    if func.__closure__ == None and not func_sig.has_kwargs:
         if not func_sig.has_req        : params.pop("req")
         if not func_sig.has_body       : params.pop("body")
         if not func_sig.has_url_params : params.pop("url_params")
@@ -98,6 +101,7 @@ def safe_run(func: RouteCallback, params: dict) -> RouteCallbackReturn:
         not func_sig.has_user_info
     ):
 
+        from .database import get_connection_and_cursor
         conn, cur = get_connection_and_cursor()
 
         if func.__closure__ == None:
@@ -188,28 +192,15 @@ def ensure_exists_in_db_by_body(table: str, pk_name: str, body_key_pk_value: str
 
 def middleware():
     def decorator(func: RouteCallback):
-        @ensure_body_keys({"token": str})
         def wrapper(**kwargs) -> RouteCallbackReturn:
-            from routes.users import logins
+            from .config import user_configs
 
-            if kwargs["body"]["token"] not in logins.keys():
+            login_check = user_configs.get("login_check_func", None)
+
+            if not login_check: raise NotImplementedError
+
+            if not login_check(**kwargs):
                 raise InvalidTokenError()
-
-            func_sig = unsafe_functions[func]
-
-            if func_sig.has_user_info:
-                conn, cur = get_connection_and_cursor()
-                kwargs["conn"] = conn
-                kwargs["cur"] = cur
-
-                cur.execute("SELECT * FROM Users WHERE id = ?", (logins[kwargs["body"]["token"]],))
-                row = cur.fetchone()
-
-                kwargs["user_info"] = {"id": row[0], "name": row[1], "password": row[2]}
-
-                with conn: 
-                    with cur:
-                        return safe_run(func, kwargs)
 
             return safe_run(func, kwargs)
 
