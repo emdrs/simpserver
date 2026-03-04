@@ -129,8 +129,18 @@ class RequestHandler(BaseHTTPRequestHandler):
                                     ensure_ascii=False,
                                     cls=SimpleEncoder).encode("utf-8"))
 
+    def do_OPTIONS(self):
+        self.send_response(HTTPStatus.NO_CONTENT)
+        self.set_default_headers()
+
     def do_GET(self) -> None:
         self.run_route(HTTPMethod.GET)
+
+    def do_PUT(self) -> None:
+        self.run_route(HTTPMethod.PUT)
+
+    def do_DELETE(self) -> None:
+        self.run_route(HTTPMethod.DELETE)
 
     def do_POST(self) -> None:
         self.run_route(HTTPMethod.POST)
