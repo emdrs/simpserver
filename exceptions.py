@@ -1,6 +1,14 @@
 from http import HTTPStatus
 
 
+class NotImplementedError(Exception):
+    """When some feature are not implemented"""
+
+    def __init__(self) -> None:
+        self.response = {"error": type(self).__name__}
+        self.status_code = HTTPStatus.INTERNAL_SERVER_ERROR
+        super().__init__()
+
 class APIError(Exception):
     """Error handled by api"""
 
