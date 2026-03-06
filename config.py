@@ -14,7 +14,8 @@ user_configs = {
     },
     "static_path": None,
     "static_url": "/static/",
-    "login_check_func": None
+    "login_check_func": None,
+    "get_user_info_func": None
 }
 
 user_config_module: ModuleType | None = None

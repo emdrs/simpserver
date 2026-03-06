@@ -84,44 +84,23 @@ def safe_run(func: RouteCallback, params: dict) -> RouteCallbackReturn:
 
     func_sig = unsafe_functions[func]
 
-    if func.__closure__ == None and not func_sig.has_kwargs:
-        if not func_sig.has_req        : params.pop("req")
-        if not func_sig.has_body       : params.pop("body")
-        if not func_sig.has_url_params : params.pop("url_params")
-        if not func_sig.has_user_info  : params.pop("user_info", None)
-        if not func_sig.has_conn       : params.pop("conn", None)
-        if not func_sig.has_cur        : params.pop("cur", None)
-        if not func_sig.has_path_params: params.pop("path_params", None)
-
-    # TODO: Check user_info breaks this below
-    if (
-        func_sig.has_conn_or_cur    and
-        "conn" not in params.keys() and
-        "cur"  not in params.keys() and
-        not func_sig.has_user_info
-    ):
-
+    if func_sig.has_conn_or_cur and "conn" not in params:
         from .database import get_connection_and_cursor
-        conn, cur = get_connection_and_cursor()
+        req = params["req"]
+        req.conn, req.cur = get_connection_and_cursor()
+        params["conn"], params["cur"] = req.conn, req.cur
 
-        if func.__closure__ == None:
-            if func_sig.has_conn: params["conn"] = conn
-            if func_sig.has_cur : params["cur"]  = cur
-        else:
-            params["conn"] = conn
-            params["cur"]  = cur
+    safe_params = params if func_sig.has_kwargs else {}
 
+    if func_sig.has_user_info and "user_info" not in params.keys():
+        from .config import user_configs
+        params["user_info"] = safe_run(user_configs["get_user_info_func"], params)
 
-        """
-        This solves a bug that if get an error with opened connection, the
-        server freezes. Why? Because was not closed? I dont know.
-        """
-        with conn: 
-            with cur:
-                response = func(**params)
-                return response
+    if func.__closure__ == None and not func_sig.has_kwargs and not safe_params:
+        for param_name in func_sig.params_names:
+            safe_params[param_name] = params[param_name]
 
-    return func(**params)
+    return func(**safe_params)
 
 
 def route(path: str, method: HTTPMethod):

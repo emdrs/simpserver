@@ -25,6 +25,8 @@ class SimpleEncoder(json.JSONEncoder):
 
 class RequestHandler(BaseHTTPRequestHandler):
     def __init__(self, request, client_address, server) -> None:
+        self.conn = None
+        self.cur  = None
         super().__init__(request, client_address, server)
 
     def set_default_headers(self) -> None:
@@ -114,6 +116,16 @@ class RequestHandler(BaseHTTPRequestHandler):
             status_code = HTTPStatus.INTERNAL_SERVER_ERROR
             print(traceback.format_exc())
             response = {"error": "Internal error"}
+        finally:
+            """
+            This solves a bug that if get an error with opened connection, the
+            server freezes. Why? Because was not closed? I dont know.
+            """
+            if self.conn:
+                self.cur.close()
+                self.conn.close()
+
+
 
         self.send_response(status_code)
         self.set_default_headers()
