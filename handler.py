@@ -58,6 +58,8 @@ class RequestHandler(BaseHTTPRequestHandler):
         url_params = {}
         params_list = self.path.split("?")[1]
 
+        if not params_list: return {}
+
         params_list = params_list.split("&") if "&" in params_list else [params_list]
 
         for param in params_list:
