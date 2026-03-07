@@ -35,7 +35,7 @@ class RequestHandler(BaseHTTPRequestHandler):
             "Access-Control-Allow-Methods", "GET, POST, PUT, DELETE, OPTIONS"
         )
         self.send_header("Access-Control-Allow-Headers", "token, Content-Type")
-        self.send_header("Content-Type", "text/html")
+        self.send_header("Content-Type", "application/json")
         self.end_headers()
 
     def get_body(self) -> dict:
