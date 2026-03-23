@@ -104,6 +104,7 @@ class RequestHandler(BaseHTTPRequestHandler):
             kwargs = {
                 "req"       :self,
                 "body"      :self.get_body(),
+                "header"    :dict(self.headers),
                 "url_params":self.get_url_params()
             }
 

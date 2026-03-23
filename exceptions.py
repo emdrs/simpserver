@@ -30,10 +30,21 @@ class BodyKeyMissingError(BadRequestError):
 
     def __init__(self, key_name: str) -> None:
         super().__init__({"key_name": key_name})
+class HeaderKeyMissingError(BadRequestError):
+    """When a needed key in header is missing"""
+
+    def __init__(self, key_name: str) -> None:
+        super().__init__({"key_name": key_name})
 
 
 class BodyKeyTypeError(BadRequestError):
     """When a type of a body key is wrong"""
+
+    def __init__(self, key_name: str, key_type: type) -> None:
+        super().__init__({"key_name": key_name, "type_needed": key_type.__name__})
+
+class HeaderKeyTypeError(BadRequestError):
+    """When a type of a header key is wrong"""
 
     def __init__(self, key_name: str, key_type: type) -> None:
         super().__init__({"key_name": key_name, "type_needed": key_type.__name__})

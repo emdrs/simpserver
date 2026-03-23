@@ -117,14 +117,33 @@ def route(path: str, method: HTTPMethod):
 def ensure_body_keys(keys: dict[str, type]):
     def decorator(func: RouteCallback):
         def wrapper(**kwargs) -> RouteCallbackReturn:
-            body = kwargs["body"]
-            body_names = body.keys()
+            header = kwargs["header"]
+            header_names = header.keys()
 
             for name, t in keys.items():
-                if name not in body_names: raise BodyKeyMissingError(name)
+                if name not in header_names: raise BodyKeyMissingError(name)
 
-                try: body[name] = t(body[name])
+                try: header[name] = t(header[name])
                 except: raise BodyKeyTypeError(name, t)
+
+            return safe_run(func, kwargs)
+
+        return wrapper
+
+    return decorator
+
+
+def ensure_header_keys(keys: dict[str, type]):
+    def decorator(func: RouteCallback):
+        def wrapper(**kwargs) -> RouteCallbackReturn:
+            header = kwargs["header"]
+            header_names = header.keys()
+
+            for name, t in keys.items():
+                if name not in header_names: raise HeaderKeyMissingError(name)
+
+                try: header[name] = t(header[name])
+                except: raise HeaderKeyTypeError(name, t)
 
             return safe_run(func, kwargs)
 
