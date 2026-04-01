@@ -1,3 +1,3 @@
-# SimpleServer
+# SimpServer
 
 A simple solution to create simples http(s) servers.
