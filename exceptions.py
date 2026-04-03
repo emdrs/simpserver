@@ -86,3 +86,10 @@ class DoNotExistsInDatabaseError(APIError):
     def __init__(self, table_name: str) -> None:
         super().__init__(HTTPStatus.BAD_REQUEST,
                          {"message": f"Invalid primary key of {table_name}"})
+
+class AlreadyExistsInDatabaseError(APIError):
+    """When something already exists in database"""
+
+    def __init__(self, table_name: str) -> None:
+        super().__init__(HTTPStatus.CONFLICT,
+                         {"message": f"Primary key already exists on {table_name}"})
