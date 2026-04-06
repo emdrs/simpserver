@@ -188,17 +188,38 @@ def ensure_exists_in_db_by_body(table: str, pk_name: str, body_key_pk_value: str
 
     return decorator
 
-def middleware():
+def get_safe_kwargs(func: Callable, kwargs: dict) -> dict:
+        sig = inspect.signature(func)
+        params = sig.parameters
+
+        if any(
+                p.kind == inspect.Parameter.VAR_KEYWORD 
+                for p in params.values()
+                ):
+            return kwargs
+
+        safe_kwargs = {key: value for key, value in kwargs.items() if key in sig.parameters.keys()}
+
+        return safe_kwargs
+
+def middleware(**middleware_kwargs):
     def decorator(func: RouteCallback):
         def wrapper(**kwargs) -> RouteCallbackReturn:
             from .config import user_configs
 
             login_check = user_configs.get("login_check_func", None)
 
-            if not login_check: raise NotImplementedError
+            kwargs["user_info"] = safe_run(user_configs["get_user_info_func"], kwargs)
 
-            if not login_check(**kwargs):
+            if not kwargs["user_info"]:
                 raise InvalidTokenError()
+
+            if not login_check:
+                raise NotImplementedError
+
+            safe_kwargs = get_safe_kwargs(login_check, kwargs | middleware_kwargs)
+            if not login_check(**safe_kwargs):
+                raise UnauthorizedError()
 
             return safe_run(func, kwargs)
 
