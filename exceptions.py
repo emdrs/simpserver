@@ -93,3 +93,9 @@ class AlreadyExistsInDatabaseError(APIError):
     def __init__(self, table_name: str) -> None:
         super().__init__(HTTPStatus.CONFLICT,
                          {"message": f"Primary key already exists on {table_name}"})
+
+class UnauthorizedError(APIError):
+    """When the acion needs a specific role of something like"""
+
+    def __init__(self) -> None:
+        super().__init__(HTTPStatus.UNAUTHORIZED, {"message": "Não autorizado."})
