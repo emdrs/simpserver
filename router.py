@@ -202,7 +202,7 @@ def get_safe_kwargs(func: Callable, kwargs: dict) -> dict:
 
         return safe_kwargs
 
-def middleware(**middleware_kwargs):
+def middleware(*middleware_args, **middleware_kwargs):
     def decorator(func: RouteCallback):
         def wrapper(**kwargs) -> RouteCallbackReturn:
             from .config import user_configs
@@ -218,7 +218,7 @@ def middleware(**middleware_kwargs):
                 raise NotImplementedError
 
             safe_kwargs = get_safe_kwargs(login_check, kwargs | middleware_kwargs)
-            if not login_check(**safe_kwargs):
+            if not login_check(*middleware_args, **safe_kwargs):
                 raise UnauthorizedError()
 
             return safe_run(func, kwargs)
